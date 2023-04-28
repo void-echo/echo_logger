@@ -5,13 +5,13 @@ with open("README.md", "r") as fh:
 
 setuptools.setup(
     name="echo_logger",
-    version="0.0.1",
+    version="0.0.2",
     author="Echo Void",
     author_email="void-echo@outlook.com",
     description="A simple logger for python, with color and time",
     long_description=long_description,
     long_description_content_type="text/markdown",
-    url="",
+    url="https://github.com/void-echo/echo_logger/",
     packages=setuptools.find_packages(),
     classifiers=[
         "Programming Language :: Python :: 3",
