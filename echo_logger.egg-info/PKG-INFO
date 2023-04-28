@@ -1,0 +1,20 @@
+Metadata-Version: 2.1
+Name: echo-logger
+Version: 0.0.1
+Summary: A simple logger for python, with color and time
+Home-page: 
+Author: Echo Void
+Author-email: void-echo@outlook.com
+Classifier: Programming Language :: Python :: 3
+Classifier: License :: OSI Approved :: MIT License
+Classifier: Operating System :: OS Independent
+Description-Content-Type: text/markdown
+License-File: LICENSE
+
+# Echo Logger
+
+This is a simple echo logger for informative, warning and error messages.
+
+Time and colored printing are supported.
+
+This repository is mostly for my own use, but feel free to use it if you want.

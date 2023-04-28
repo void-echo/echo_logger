@@ -1,0 +1,9 @@
+LICENSE
+README.md
+setup.py
+echo_logger/__init__.py
+echo_logger/echo_logger.py
+echo_logger.egg-info/PKG-INFO
+echo_logger.egg-info/SOURCES.txt
+echo_logger.egg-info/dependency_links.txt
+echo_logger.egg-info/top_level.txt
