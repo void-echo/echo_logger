@@ -1,5 +1,7 @@
 # Echo Logger
 
+pip repo is [here](https://pypi.org/project/echo-logger/).
+
 This is a simple echo logger for informative, warning and error messages.
 
 Time and colored printing are supported.
