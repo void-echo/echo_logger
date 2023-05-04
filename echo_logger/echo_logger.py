@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 import time
 
-
+echo_logger_debug = True
 class _colors:
     RESET = "\033[0m"  # Text Reset
 
@@ -77,6 +77,8 @@ class _colors:
 
 
 def print_info(*args, **kwargs):
+    if not echo_logger_debug:
+        return
     # print with green color: [INFO]
     with_time = kwargs.pop('with_time', False)
     pre_print_str = _colors.GREEN_BOLD + '[INFO]' + _colors.RESET if not with_time else _colors.GREEN_BOLD + '[INFO ' + time.strftime(
@@ -85,6 +87,8 @@ def print_info(*args, **kwargs):
 
 
 def print_err(*args, **kwargs):
+    if not echo_logger_debug:
+        return
     # print with red color: [ERROR]
     with_time = kwargs.pop('with_time', False)
     pre_print_str = _colors.RED_BOLD + '[ERR ]' + _colors.RESET if not with_time else _colors.RED_BOLD + '[ERR  ' + time.strftime(
@@ -93,6 +97,8 @@ def print_err(*args, **kwargs):
 
 
 def print_warn(*args, **kwargs):
+    if not echo_logger_debug:
+        return
     # print with yellow color: [WARNING]
     with_time = kwargs.pop('with_time', False)
     pre_print_str = _colors.YELLOW_BOLD + '[WARN]' + _colors.RESET if not with_time else _colors.YELLOW_BOLD + '[WARN ' + time.strftime(
