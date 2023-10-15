@@ -7,3 +7,4 @@ echo_logger.egg-info/PKG-INFO
 echo_logger.egg-info/SOURCES.txt
 echo_logger.egg-info/dependency_links.txt
 echo_logger.egg-info/top_level.txt
+test/test.py

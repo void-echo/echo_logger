@@ -1,5 +1,7 @@
 #!/usr/bin/env python
+import functools
 import time
+import warnings
 
 echo_logger_debug = True
 class _colors:
@@ -104,3 +106,17 @@ def print_warn(*args, **kwargs):
     pre_print_str = _colors.YELLOW_BOLD + '[WARN]' + _colors.RESET if not with_time else _colors.YELLOW_BOLD + '[WARN ' + time.strftime(
         '%Y-%m-%d %H:%M:%S', time.localtime(time.time())) + ']' + _colors.RESET
     print(pre_print_str, *args, **kwargs)
+
+def deprecated(func):
+    """This is a decorator which can be used to mark functions
+    as deprecated. It will result in a warning being emitted
+    when the function is used."""
+    @functools.wraps(func)
+    def new_func(*args, **kwargs):
+        warnings.simplefilter('always', DeprecationWarning)  # turn off filter
+        warnings.warn("Call to deprecated function {}.".format(func.__name__),
+                      category=DeprecationWarning,
+                      stacklevel=2)
+        warnings.simplefilter('default', DeprecationWarning)  # reset filter
+        return func(*args, **kwargs)
+    return new_func
