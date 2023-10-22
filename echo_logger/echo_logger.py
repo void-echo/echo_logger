@@ -120,3 +120,16 @@ def deprecated(func):
         warnings.simplefilter('default', DeprecationWarning)  # reset filter
         return func(*args, **kwargs)
     return new_func
+
+def profile(func):
+    """This is a decorator which can be used to test and record
+    the time of a function. It will print the time of the function
+    when the function is used."""
+    @functools.wraps(func)
+    def new_func(*args, **kwargs):
+        time_start = time.time()
+        result = func(*args, **kwargs)
+        time_end = time.time()
+        print_info(f"Function {func.__name__}() costs {time_end - time_start} seconds.")
+        return result
+    return new_func
