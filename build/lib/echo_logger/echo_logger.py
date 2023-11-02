@@ -3,7 +3,11 @@ import functools
 import time
 import warnings
 
+# noinspection DuplicatedCode
 echo_logger_debug = True
+
+
+# noinspection PyPep8Naming
 class _colors:
     RESET = "\033[0m"  # Text Reset
 
@@ -82,9 +86,12 @@ def print_info(*args, **kwargs):
     if not echo_logger_debug:
         return
     # print with green color: [INFO]
-    with_time = kwargs.pop('with_time', False)
-    pre_print_str = _colors.GREEN_BOLD + '[INFO]' + _colors.RESET if not with_time else _colors.GREEN_BOLD + '[INFO ' + time.strftime(
-        '%Y-%m-%d %H:%M:%S', time.localtime(time.time())) + ']' + _colors.RESET
+    with_time = kwargs.pop('with_time', True)
+    if not with_time:
+        pre_print_str = _colors.GREEN_BOLD + '[INFO]' + _colors.RESET
+    else:
+        pre_print_str = _colors.GREEN_BOLD + '[INFO ' + time.strftime(
+            '%Y-%m-%d %H:%M:%S', time.localtime(time.time())) + ']' + _colors.RESET
     print(pre_print_str, *args, **kwargs)
 
 
@@ -92,9 +99,25 @@ def print_err(*args, **kwargs):
     if not echo_logger_debug:
         return
     # print with red color: [ERROR]
-    with_time = kwargs.pop('with_time', False)
-    pre_print_str = _colors.RED_BOLD + '[ERR ]' + _colors.RESET if not with_time else _colors.RED_BOLD + '[ERR  ' + time.strftime(
-        '%Y-%m-%d %H:%M:%S', time.localtime(time.time())) + ']' + _colors.RESET
+    with_time = kwargs.pop('with_time', True)
+    if not with_time:
+        pre_print_str = _colors.RED_BOLD + '[ERR ]' + _colors.RESET
+    else:
+        pre_print_str = _colors.RED_BOLD + '[ERR  ' + time.strftime(
+            '%Y-%m-%d %H:%M:%S', time.localtime(time.time())) + ']' + _colors.RESET
+    print(pre_print_str, *args, **kwargs)
+
+
+def print_debug(*args, **kwargs):
+    if not echo_logger_debug:
+        return
+    # print with blue color: [DBUG]
+    with_time = kwargs.pop('with_time', True)
+    if not with_time:
+        pre_print_str = _colors.BLUE_BOLD + '[DBUG]' + _colors.RESET
+    else:
+        pre_print_str = _colors.BLUE_BOLD + '[DBUG ' + time.strftime(
+            '%Y-%m-%d %H:%M:%S', time.localtime(time.time())) + ']' + _colors.RESET
     print(pre_print_str, *args, **kwargs)
 
 
@@ -102,15 +125,20 @@ def print_warn(*args, **kwargs):
     if not echo_logger_debug:
         return
     # print with yellow color: [WARNING]
-    with_time = kwargs.pop('with_time', False)
-    pre_print_str = _colors.YELLOW_BOLD + '[WARN]' + _colors.RESET if not with_time else _colors.YELLOW_BOLD + '[WARN ' + time.strftime(
-        '%Y-%m-%d %H:%M:%S', time.localtime(time.time())) + ']' + _colors.RESET
+    with_time = kwargs.pop('with_time', True)
+    if not with_time:
+        pre_print_str = _colors.YELLOW_BOLD + '[WARN]' + _colors.RESET
+    else:
+        pre_print_str = _colors.YELLOW_BOLD + '[WARN ' + time.strftime(
+            '%Y-%m-%d %H:%M:%S', time.localtime(time.time())) + ']' + _colors.RESET
     print(pre_print_str, *args, **kwargs)
+
 
 def deprecated(func):
     """This is a decorator which can be used to mark functions
     as deprecated. It will result in a warning being emitted
     when the function is used."""
+
     @functools.wraps(func)
     def new_func(*args, **kwargs):
         warnings.simplefilter('always', DeprecationWarning)  # turn off filter
@@ -119,17 +147,23 @@ def deprecated(func):
                       stacklevel=2)
         warnings.simplefilter('default', DeprecationWarning)  # reset filter
         return func(*args, **kwargs)
+
     return new_func
+
 
 def profile(func):
     """This is a decorator which can be used to test and record
     the time of a function. It will print the time of the function
     when the function is used."""
+
     @functools.wraps(func)
     def new_func(*args, **kwargs):
         time_start = time.time()
         result = func(*args, **kwargs)
         time_end = time.time()
-        print_info(f"Function {func.__name__}() costs {time_end - time_start} seconds.")
+        # print with xx.xxxx seconds
+        time_str = f"{time_end - time_start:.4f}"
+        print_debug(f"Function {func.__name__}() costs {time_str} seconds.", with_time=True)
         return result
+
     return new_func
