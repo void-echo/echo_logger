@@ -1,5 +1,6 @@
 #!/usr/bin/env python
 import functools
+import json
 import time
 import warnings
 
@@ -162,8 +163,52 @@ def profile(func):
         result = func(*args, **kwargs)
         time_end = time.time()
         # print with xx.xxxx seconds
-        time_str = f"{time_end - time_start:.4f}"
-        print_debug(f"Function {func.__name__}() costs {time_str} seconds.", with_time=True)
+        total_time_seconds = time_end - time_start
+        hours, rem = divmod(total_time_seconds, 3600)
+        minutes, seconds = divmod(rem, 60)
+        # time_str = "{:0>2}:{:0>2}:{:05.2f}".format(int(hours), int(minutes), seconds)
+        # print seconds reserving 4 digits
+        if total_time_seconds < 60:
+            time_str = "{:05.4f} seconds".format(seconds)
+        elif total_time_seconds < 3600:
+            time_str = "{:0>2} minutes {:05.4f} seconds".format(int(minutes), seconds)
+        else:
+            time_str = "{:0>2} hours {:0>2} minutes {:05.4f} seconds".format(int(hours), int(minutes), seconds)
+        print_debug(f"Function {func.__name__}() costs {time_str}.", with_time=True)
         return result
 
     return new_func
+
+
+# decorator print an object like json
+def print_json(func):
+    """Decorator for function, print the returned object like json"""
+
+    def wrapper(*args, **kwargs):
+        returned = func(*args, **kwargs)
+        print_info(json.dumps(returned, indent=4, ensure_ascii=False, default=lambda o: '<not serializable>'))
+        return returned
+
+    return wrapper
+
+
+def try_catch(func):
+    """Decorator for function, try catch the function
+       This decorator is used to avoid the program to be terminated by exception.
+       If multiple decorators are used, this decorator should be the outermost one.
+       Because this decorator will catch all exceptions, and the other decorators may not work.
+    """
+
+    def wrapper(*args, **kwargs):
+        try:
+            returned = func(*args, **kwargs)
+            return returned
+        except Exception as e:
+            print_err(e)
+            return None
+
+    return wrapper
+
+
+if __name__ == '__main__':
+    pass
