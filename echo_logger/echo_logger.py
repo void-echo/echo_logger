@@ -10,6 +10,9 @@ echo_logger_debug = True
 
 # noinspection PyPep8Naming
 class _colors:
+    def __init__(self):
+        pass
+
     RESET = "\033[0m"  # Text Reset
 
     # Regular Colors
@@ -186,7 +189,7 @@ def print_json(func):
 
     def wrapper(*args, **kwargs):
         returned = func(*args, **kwargs)
-        print_info(json.dumps(returned, indent=4, ensure_ascii=False, default=lambda o: '<not serializable>'))
+        print_info(dumps_json(returned))
         return returned
 
     return wrapper
@@ -208,6 +211,71 @@ def try_catch(func):
             return None
 
     return wrapper
+
+
+def dumps_json(data, indent=2, depth=2):
+    assert depth > 0
+    space = ' ' * indent
+    s = json.dumps(data, indent=indent, default=lambda o: '<not serializable>')
+    lines = s.splitlines()
+    _N = len(lines)
+    # determine which lines to be shortened
+    is_over_depth_line: Callable[[Any], bool] = lambda i: i in range(_N) and lines[i].startswith(space * (depth + 1))
+    is_open_bracket_line: Callable[[Any], bool] = lambda i: not is_over_depth_line(i) and is_over_depth_line(i + 1)
+    is_close_bracket_line: Callable[[Any], bool] = lambda i: not is_over_depth_line(i) and is_over_depth_line(i - 1)
+
+    #
+    def shorten_line(line_index):
+        if not is_open_bracket_line(line_index):
+            return lines[line_index]
+        # shorten over-depth lines
+        start = line_index
+        end = start
+        while not is_close_bracket_line(end):
+            end += 1
+        has_trailing_comma = lines[end][-1] == ','
+        _lines = [lines[start][-1], *lines[start + 1:end], lines[end].replace(',', '')]
+        d = json.dumps(json.loads(' '.join(_lines)))
+        return lines[line_index][:-1] + d + (',' if has_trailing_comma else '')
+
+    #
+    s = '\n'.join([
+        shorten_line(i)
+        for i in range(_N) if not is_over_depth_line(i) and not is_close_bracket_line(i)
+    ])
+    #
+    return s
+
+
+def save_json(path_: str = None):
+    def decorator(func):
+        @wraps(func)
+        def wrapper(*args, **kwargs):
+            result = func(*args, **kwargs)
+            json_str = dumps_json(result)
+            with open(path_, 'w') as f:
+                f.write(json_str)
+            return func(*args, **kwargs)
+
+        return wrapper
+
+    return decorator
+
+
+class ColorString:
+    def __init__(self):
+        pass
+
+    red = '\033[31m'
+    green = '\033[32m'
+    yellow = '\033[33m'
+    end = '\033[0m'
+    none = ''  # no color, placeholder
+
+    @staticmethod
+    def coloring(string: str, color: str = red) -> str:
+        color = eval(f'ColorString.{color.lower()}')
+        return color + string + ColorString.end
 
 
 if __name__ == '__main__':
