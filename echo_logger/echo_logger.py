@@ -1,8 +1,14 @@
 #!/usr/bin/env python
 import functools
 import json
+import os
+import socket
 import time
 import warnings
+from pathlib import Path
+from typing import Callable, Any, Dict
+
+import requests
 
 # noinspection DuplicatedCode
 echo_logger_debug = True
@@ -249,7 +255,7 @@ def dumps_json(data, indent=2, depth=2):
 
 def save_json(path_: str = None):
     def decorator(func):
-        @wraps(func)
+        @functools.wraps(func)
         def wrapper(*args, **kwargs):
             result = func(*args, **kwargs)
             json_str = dumps_json(result)
@@ -278,5 +284,60 @@ class ColorString:
         return color + string + ColorString.end
 
 
+class FeiShuMessage:
+    content: Dict[str, Any]
+
+    def __init__(self, title_: str = None, content_: str = None):
+        self.content = {
+            "msg_type": "post",
+            "content": {
+                "post": {
+                    "zh_cn": {
+                        "title": "Notification from Python" if title_ is None else title_,
+                        "content": [[
+                            {
+                                "tag": "text",
+                                "text": "content is empty" if content_ is None else content_
+                            }
+                        ]]
+                    }
+                }
+            }
+        }
+
+    def to_json(self):
+        return dumps_json(self.content)
+
+
+def send_feishu(title_: str = None, content_: str = None, url_: str = None, with_machine_info: bool = True):
+    if url_ is None:
+        url_file = Path.home() / ".feishu_bot"
+        if not os.path.exists(url_file):
+            print_err(f"Feishu Bot need a explicit url or a file named {url_file} in your home directory to work.\n"
+                      f".feishu_bot content can be like: https://open.feishu.cn/open-apis/bot/v2/hook/****\n"
+                      f"Please create a bot in Feishu and get the url.")
+            return
+        with open(url_file, 'r', encoding='UTF-8') as f:
+            url_ = f.read().strip()
+    msg = FeiShuMessage(title_, content_)
+    if with_machine_info:
+        div_, ln_ = {"tag": "text", "text": "\n\n"}, {"tag": "text", "text": "\n"}
+        s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+        s.connect(("8.8.8.8", 80))
+        my_ip = s.getsockname()[0]
+        s.close()
+        msg.content['content']['post']['zh_cn']['content'][0].extend([
+            div_, {
+                "tag": "text",
+                "text": f"Host IP: {my_ip} (This IP may be not accurate)"
+            }, ln_, {
+                "tag": "text",
+                "text": f"Host Name: {socket.gethostname()}"
+            }
+        ])
+    headers = {'Content-Type': 'application/json'}
+    requests.post(url_, data=msg.to_json(), headers=headers)
+
+
 if __name__ == '__main__':
-    pass
+    send_feishu('test', 'test')
