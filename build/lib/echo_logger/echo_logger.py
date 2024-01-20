@@ -161,6 +161,25 @@ def deprecated(func):
     return new_func
 
 
+def calc_time(time_start, time_end):
+    """This is a function which can be used to calculate
+    the time between two time points. It will return the
+    time in format xx:xx:xx.xx"""
+
+    total_time_seconds = time_end - time_start
+    hours, rem = divmod(total_time_seconds, 3600)
+    minutes, seconds = divmod(rem, 60)
+    # time_str = "{:0>2}:{:0>2}:{:05.2f}".format(int(hours), int(minutes), seconds)
+    # print seconds reserving 4 digits
+    if total_time_seconds < 60:
+        time_str = "{:05.4f} seconds".format(seconds)
+    elif total_time_seconds < 3600:
+        time_str = "{:0>2} minutes {:05.4f} seconds".format(int(minutes), seconds)
+    else:
+        time_str = "{:0>2} hours {:0>2} minutes {:05.4f} seconds".format(int(hours), int(minutes), seconds)
+    return time_str
+
+
 def profile(func):
     """This is a decorator which can be used to test and record
     the time of a function. It will print the time of the function
@@ -172,17 +191,7 @@ def profile(func):
         result = func(*args, **kwargs)
         time_end = time.time()
         # print with xx.xxxx seconds
-        total_time_seconds = time_end - time_start
-        hours, rem = divmod(total_time_seconds, 3600)
-        minutes, seconds = divmod(rem, 60)
-        # time_str = "{:0>2}:{:0>2}:{:05.2f}".format(int(hours), int(minutes), seconds)
-        # print seconds reserving 4 digits
-        if total_time_seconds < 60:
-            time_str = "{:05.4f} seconds".format(seconds)
-        elif total_time_seconds < 3600:
-            time_str = "{:0>2} minutes {:05.4f} seconds".format(int(minutes), seconds)
-        else:
-            time_str = "{:0>2} hours {:0>2} minutes {:05.4f} seconds".format(int(hours), int(minutes), seconds)
+        time_str = calc_time(time_start, time_end)
         print_debug(f"Function {func.__name__}() costs {time_str}.", with_time=True)
         return result
 
@@ -193,6 +202,7 @@ def profile(func):
 def print_json(func):
     """Decorator for function, print the returned object like json"""
 
+    @functools.wraps(func)
     def wrapper(*args, **kwargs):
         returned = func(*args, **kwargs)
         print_info(dumps_json(returned))
@@ -286,6 +296,7 @@ class ColorString:
 
 class FeiShuMessage:
     content: Dict[str, Any]
+    div_, ln_ = {"tag": "text", "text": "\n\n"}, {"tag": "text", "text": "\n"}
 
     def __init__(self, title_: str = None, content_: str = None):
         self.content = {
@@ -308,8 +319,14 @@ class FeiShuMessage:
     def to_json(self):
         return dumps_json(self.content)
 
+    def extent(self, msg: str):
+        self.content['content']['post']['zh_cn']['content'][0].extend([
+            FeiShuMessage.ln_, {"tag": "text", "text": msg}
+        ])
 
-def send_feishu(title_: str = None, content_: str = None, url_: str = None, with_machine_info: bool = True):
+
+def send_feishu(title_: str = None, content_: str = None, url_: str | Path = None, with_machine_info: bool = True,
+                pre_packed_msg: FeiShuMessage = None):
     if url_ is None:
         url_file = Path.home() / ".feishu_bot"
         if not os.path.exists(url_file):
@@ -319,24 +336,51 @@ def send_feishu(title_: str = None, content_: str = None, url_: str = None, with
             return
         with open(url_file, 'r', encoding='UTF-8') as f:
             url_ = f.read().strip()
-    msg = FeiShuMessage(title_, content_)
+    elif isinstance(url_, Path) or isinstance(url_, str) and os.path.exists(url_):
+        with open(url_, 'r', encoding='UTF-8') as f:
+            url_ = f.read().strip()
+    else:
+        raise ValueError(f"Invalid url: {url_}")
+    msg = FeiShuMessage(title_, content_) if pre_packed_msg is None else pre_packed_msg
     if with_machine_info:
-        div_, ln_ = {"tag": "text", "text": "\n\n"}, {"tag": "text", "text": "\n"}
         s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
         s.connect(("8.8.8.8", 80))
         my_ip = s.getsockname()[0]
         s.close()
-        msg.content['content']['post']['zh_cn']['content'][0].extend([
-            div_, {
-                "tag": "text",
-                "text": f"Host IP: {my_ip} (This IP may be not accurate)"
-            }, ln_, {
-                "tag": "text",
-                "text": f"Host Name: {socket.gethostname()}"
-            }
-        ])
+        msg.extent("\n")
+        msg.extent(f"Host IP: {my_ip} (This IP may be not accurate)")
+        msg.extent(f"Host Name: {socket.gethostname()}")
     headers = {'Content-Type': 'application/json'}
     requests.post(url_, data=msg.to_json(), headers=headers)
+
+
+def monit_feishu(title_ok: str = None, content_ok: str = None, url_: str = None, with_machine_info: bool = True,
+                 title_err: str = None, content_err: str = None):
+    def decorator(func):
+        @functools.wraps(func)
+        def wrapper(*args, **kwargs):
+            time_start = time.time()
+            real_title_, real_content_ = None, None
+            try:
+                result = func(*args, **kwargs)
+                real_title_ = f"Python Function {func.__name__}() Executed Successfully" if title_ok is None else title_ok
+                real_content_ = f"args: {args}\nkwargs: {kwargs}" if content_ok is None else content_ok
+                return result
+            except Exception as e:
+                e_str = str(e)
+                real_title_ = f"Failed to Execute Python Function {func.__name__}()" if title_err is None else title_err
+                real_content_ = f"args: {args}\nkwargs: {kwargs}\nError: {e_str}" if content_err is None else content_err
+            finally:
+                time_end = time.time()
+                time_str = calc_time(time_start, time_end)
+                # Your function has been executed successfully in xx:xx:xx.xx
+                msg = FeiShuMessage(real_title_, real_content_)
+                msg.extent(f"Running time: {time_str}")
+                send_feishu(pre_packed_msg=msg, url_=url_, with_machine_info=with_machine_info)
+
+        return wrapper
+
+    return decorator
 
 
 if __name__ == '__main__':
