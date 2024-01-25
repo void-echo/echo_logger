@@ -6,7 +6,7 @@ import socket
 import time
 import warnings
 from pathlib import Path
-from typing import Callable, Any, Dict
+from typing import Callable, Any, Dict, Union
 
 import requests
 
@@ -325,7 +325,7 @@ class FeiShuMessage:
         ])
 
 
-def send_feishu(title_: str = None, content_: str = None, url_: str | Path = None, with_machine_info: bool = True,
+def send_feishu(title_: str = None, content_: str = None, url_: Union[str, Path] = None, with_machine_info: bool = True,
                 pre_packed_msg: FeiShuMessage = None):
     if url_ is None:
         url_file = Path.home() / ".feishu_bot"
