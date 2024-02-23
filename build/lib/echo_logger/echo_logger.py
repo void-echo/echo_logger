@@ -251,7 +251,7 @@ def dumps_json(data, indent=2, depth=2, *args, **kwargs):
             end += 1
         has_trailing_comma = lines[end][-1] == ','
         _lines = [lines[start][-1], *lines[start + 1:end], lines[end].replace(',', '')]
-        d = json.dumps(json.loads(' '.join(_lines)))
+        d = json.dumps(json.loads(' '.join(_lines), *args, **kwargs))
         return lines[line_index][:-1] + d + (',' if has_trailing_comma else '')
 
     #
