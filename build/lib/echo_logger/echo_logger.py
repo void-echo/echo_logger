@@ -229,10 +229,10 @@ def try_catch(func):
     return wrapper
 
 
-def dumps_json(data, indent=2, depth=2):
+def dumps_json(data, indent=2, depth=2, *args, **kwargs):
     assert depth > 0
     space = ' ' * indent
-    s = json.dumps(data, indent=indent, default=lambda o: '<not serializable>')
+    s = json.dumps(data, indent=indent, default=lambda o: '<not serializable>', *args, **kwargs)
     lines = s.splitlines()
     _N = len(lines)
     # determine which lines to be shortened
@@ -268,7 +268,7 @@ def save_json(path_: str = None):
         @functools.wraps(func)
         def wrapper(*args, **kwargs):
             result = func(*args, **kwargs)
-            json_str = dumps_json(result)
+            json_str = dumps_json(result, ensure_ascii=False)
             with open(path_, 'w') as f:
                 f.write(json_str)
             return func(*args, **kwargs)
@@ -383,5 +383,12 @@ def monit_feishu(title_ok: str = None, content_ok: str = None, url_: str = None,
     return decorator
 
 
+@save_json(path_='./test123123.json')
+def dumps_json_test(data):
+    return data
+
+
 if __name__ == '__main__':
-    send_feishu('test', 'test')
+    print_info(dumps_json({
+        1: "哈哈哈"
+    }, ensure_ascii=False))

@@ -5,7 +5,7 @@ with open("README.md", "r") as fh:
 
 setuptools.setup(
     name="echo_logger",
-    version="0.1.1",
+    version="0.1.2",
     author="Echo Void",
     author_email="void-echo@outlook.com",
     description="A simple logger for python, with color and time",

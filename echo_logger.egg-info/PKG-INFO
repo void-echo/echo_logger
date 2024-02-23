@@ -1,6 +1,6 @@
 Metadata-Version: 2.1
 Name: echo_logger
-Version: 0.1.1
+Version: 0.1.2
 Summary: A simple logger for python, with color and time
 Home-page: https://github.com/void-echo/echo_logger/
 Author: Echo Void
