@@ -161,6 +161,15 @@ def deprecated(func):
     return new_func
 
 
+def no_problem(func):
+    @functools.wraps(func)
+    def new_func(*args, **kwargs):
+        # do nothing
+        return func(*args, **kwargs)
+
+    return new_func
+
+
 def calc_time(time_start, time_end):
     """This is a function which can be used to calculate
     the time between two time points. It will return the
