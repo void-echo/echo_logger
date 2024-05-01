@@ -1,5 +1,6 @@
 #!/usr/bin/env python
 import functools
+import io
 import json
 import os
 import socket
@@ -9,9 +10,12 @@ from pathlib import Path
 from typing import Callable, Any, Dict, Union
 
 import requests
+from loguru import logger
 
 # noinspection DuplicatedCode
 echo_logger_debug = True
+log_sink = io.StringIO()
+logger.add(log_sink, format="{time:YYYY-MM-DD HH:mm:ss} | {level} | {message}", level="ERROR")
 
 
 # noinspection PyPep8Naming
@@ -376,7 +380,9 @@ def monit_feishu(title_ok: str = None, content_ok: str = None, url_: str = None,
                 real_content_ = f"args: {args}\nkwargs: {kwargs}" if content_ok is None else content_ok
                 return result
             except Exception as e:
-                e_str = str(e)
+                # loguru print full traceback
+                logger.exception(e)
+                e_str = log_sink.getvalue()
                 real_title_ = f"Failed to Execute Python Function {func.__name__}()" if title_err is None else title_err
                 real_content_ = f"args: {args}\nkwargs: {kwargs}\nError: {e_str}" if content_err is None else content_err
             finally:

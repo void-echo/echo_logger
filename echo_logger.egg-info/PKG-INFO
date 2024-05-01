@@ -1,6 +1,6 @@
 Metadata-Version: 2.1
 Name: echo_logger
-Version: 0.1.5
+Version: 0.1.6
 Summary: A simple logger for python, with color and time
 Home-page: https://github.com/void-echo/echo_logger/
 Author: Echo Void
@@ -10,6 +10,8 @@ Classifier: License :: OSI Approved :: MIT License
 Classifier: Operating System :: OS Independent
 Description-Content-Type: text/markdown
 License-File: LICENSE
+Requires-Dist: requests
+Requires-Dist: loguru
 
 # Echo Logger
 
