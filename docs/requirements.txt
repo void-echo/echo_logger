@@ -1,0 +1,4 @@
+sphinx>=7.0.0
+sphinx-rtd-theme>=1.0.0
+loguru>=0.7.0
+requests>=2.31.0 
